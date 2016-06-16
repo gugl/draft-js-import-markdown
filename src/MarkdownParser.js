@@ -378,7 +378,8 @@ Lexer.prototype.token = function(src, top, bq) {
 
 var inline = {
   escape: /^\\([\\`*{}\[\]()#+\-.!_>])/,
-  link: /^!?\[(inside)\]\(href\)/,
+  mention: /@\[(inside)\]\(href\)/,
+  link: /!?\[(inside)\]\(href\)/,
   reflink: /^!?\[(inside)\]\s*\[([^\]]*)\]/,
   nolink: /^!?\[((?:\[[^\]]*\]|[^\[\]])*)\]/,
   strong: /^__([\s\S]+?)__(?!_)|^\*\*([\s\S]+?)\*\*(?!\*)/,
@@ -392,6 +393,11 @@ var inline = {
 
 inline._inside = /(?:\[[^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*/;
 inline._href = /\s*<?([\s\S]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*/;
+
+inline.mention = replace(inline.mention)
+  ('inside', inline._inside)
+  ('href', inline._href)
+  ();
 
 inline.link = replace(inline.link)
   ('inside', inline._inside)
@@ -485,7 +491,6 @@ InlineLexer.parse = function(src, links, options) {
 
 InlineLexer.prototype.parse = function(src) {
   var out = new FragmentNode();
-  var link;
   var cap;
 
   while (src) {
@@ -496,31 +501,21 @@ InlineLexer.prototype.parse = function(src) {
       continue;
     }
 
-    // link
-    if ((cap = this.rules.link.exec(src))) {
-      src = src.substring(cap[0].length);
-      this.inLink = true;
-      out.appendChild(this.outputLink(cap, {href: cap[2], title: cap[3]}));
-      this.inLink = false;
-      continue;
-    }
+    // mention
+//    if ((cap = this.rules.mention.exec(src))) {
+//      src = src.substring(cap[0].length);
+//      out.appendChild(this.renderer.text(new TextNode(cap[0])));
+//      continue;
+//    }
 
-    // reflink, nolink
-    if ((cap = this.rules.reflink.exec(src))
-        || (cap = this.rules.nolink.exec(src))) {
-      src = src.substring(cap[0].length);
-      link = (cap[2] || cap[1]).replace(/\s+/g, ' ');
-      link = this.links[link.toLowerCase()];
-      if (!link || !link.href) {
-        out.appendChild(new TextNode(cap[0].charAt(0)));
-        src = cap[0].substring(1) + src;
-        continue;
-      }
-      this.inLink = true;
-      out.appendChild(this.outputLink(cap, link));
-      this.inLink = false;
-      continue;
-    }
+    // link
+//    if ((cap = this.rules.link.exec(src))) {
+//      src = src.substring(cap[0].length);
+//      this.inLink = true;
+//      out.appendChild(this.outputLink(cap, {href: cap[2], title: cap[3]}));
+//      this.inLink = false;
+//      continue;
+//    }
 
     // strong
     if ((cap = this.rules.strong.exec(src))) {
